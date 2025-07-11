@@ -56,6 +56,12 @@ PYBIND11_MODULE(KTransformersOps, m) {
         }, "Function to dequantize q2_k data.",
         py::arg("data"), py::arg("num_bytes"), py::arg("blk_size"), py::arg("ele_per_blk"), py::arg("device"), py::arg("target_dtype"));
 
+    m.def("dequantize_iq3_s", [](const intptr_t data, int num_bytes, int blk_size, const int ele_per_blk, torch::Device device, py::object target_dtype) {
+        torch::Dtype dtype = torch::python::detail::py_object_to_dtype(target_dtype);
+        return dequantize_iq3_s((int8_t*)data, num_bytes, blk_size, ele_per_blk, device, dtype);
+        }, "Function to dequantize iq3_s data.",
+        py::arg("data"), py::arg("num_bytes"), py::arg("blk_size"), py::arg("ele_per_blk"), py::arg("device"), py::arg("target_dtype"));
+
     m.def("dequantize_iq4_xs", [](const intptr_t data, int num_bytes, int blk_size, const int ele_per_blk, torch::Device device, py::object target_dtype) {
         torch::Dtype dtype = torch::python::detail::py_object_to_dtype(target_dtype);
         return dequantize_iq4_xs((int8_t*)data, num_bytes, blk_size, ele_per_blk, device, dtype);

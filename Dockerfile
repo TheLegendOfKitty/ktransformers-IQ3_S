@@ -47,10 +47,19 @@ RUN pip install ninja pyproject numpy cpufeature aiohttp zmq openai
 RUN pip install flash-attn
 
 # 安装 ktransformers 本体（含编译）
-RUN CPU_INSTRUCT=${CPU_INSTRUCT} \
+RUN NPROC=$(nproc) && \
+    WORKERS=$((NPROC * 3 / 4)) && \
+    if [ $WORKERS -lt 1 ]; then WORKERS=1; fi && \
+    echo "Auto-detected $NPROC cores, using $WORKERS parallel jobs with jobserver fixes" && \
+    export MAKEFLAGS="-j$WORKERS --no-print-directory" && \
+    export CMAKE_BUILD_PARALLEL_LEVEL=$WORKERS && \
+    export MAX_JOBS=$WORKERS && \
+    unset PARALLEL && \
+    CPU_INSTRUCT=AVX512 \
     USE_BALANCE_SERVE=1 \
     KTRANSFORMERS_FORCE_BUILD=TRUE \
     TORCH_CUDA_ARCH_LIST="8.0;8.6;8.7;8.9;9.0+PTX" \
+    CMAKE_ARGS="-DCMAKE_CXX_FLAGS=-fno-lto -DCMAKE_C_FLAGS=-fno-lto -DLLAMA_AVX512=ON -DLLAMA_AVX512_VBMI=ON -DLLAMA_AVX512_VNNI=ON" \
     pip install . --no-build-isolation --verbose
 
 RUN pip install third_party/custom_flashinfer/
